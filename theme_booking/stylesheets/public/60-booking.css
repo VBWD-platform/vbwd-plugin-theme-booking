@@ -8,11 +8,13 @@
    borders, surfaces) that token carries the view's literal as its fallback, so the
    default rendering is the SPA's. The remaining literal colours — hover darkenings,
    shadows, the light-blue badge / selected-slot tints, the red error and
-   required-marker text, the yellow requirements / cancel / pending tints, the green
-   paid tints and the secondary-button grey — are the fallbacks of --vbwd-booking-*
+   required-marker text, the yellow cancel / pending tints and the green paid
+   tints — are the fallbacks of --vbwd-booking-*
    tokens (S152-06d), overridable by a child theme's tokens.json or a CMS style. The
    SPA scopes each view; where two views style a shared class differently, the
-   resource-detail value is kept. */
+   resource-detail value is kept. The checkout-wide rules the pay, success and cancel
+   pages share (.card, .btn, .public-checkout, states, spinner, requirements) come from
+   theme_checkout's stylesheet, which loads before this one. */
 
 /* BookingCatalogue.vue */
 .booking-catalogue { max-width: 1100px; margin: 0 auto; padding: 20px; }
@@ -277,35 +279,10 @@
 .booking-form__checkbox { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; }
 .booking-form__actions { display: flex; align-items: center; gap: 16px; margin-top: 24px; }
 
-/* BookingCheckout.vue (the pay page) */
-.public-checkout { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
-.public-checkout h1 { margin-bottom: 30px; color: var(--vbwd-color-text, #2c3e50); }
-.loading-state,
-.error-state { text-align: center; padding: 60px 20px; color: var(--vbwd-text-secondary, #666); }
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid var(--vbwd-bg-muted, #f3f3f3);
-  border-top: 3px solid var(--vbwd-color-primary, #3498db);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 15px;
-}
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-.checkout-content { display: flex; flex-direction: column; gap: 20px; }
-.card {
-  background: var(--vbwd-color-surface, #fff);
-  padding: 25px;
-  border-radius: 8px;
-  box-shadow: 0 2px 5px var(--vbwd-booking-card-shadow, rgba(0, 0, 0, 0.05));
-}
-.card h2 {
-  margin-bottom: 20px;
-  color: var(--vbwd-color-text, #2c3e50);
-  font-size: 1.2rem;
-  border-bottom: 1px solid var(--vbwd-border-color, #eee);
-  padding-bottom: 10px;
-}
+/* BookingCheckout.vue (the pay page). Its shared checkout rules — .public-checkout, the
+   states, the spinner, .checkout-content, .card, .checkout-actions, .requirements, .btn,
+   .pay-button, .order-saved — are theme_checkout's (a declared dependency, so its
+   stylesheet loads first); only the booking-specific rules stay here. */
 .booking-resource-block {
   display: flex;
   gap: 16px;
@@ -335,6 +312,7 @@
   font-size: 0.95rem;
 }
 .booking-detail-row span:first-child { color: var(--vbwd-text-secondary, #6b7280); font-weight: 500; }
+/* Only the booking pay island renders .total (the checkout island's is .order-total). */
 .total {
   margin-top: 15px;
   padding-top: 15px;
@@ -342,57 +320,17 @@
   font-size: 1.2rem;
   text-align: right;
 }
-.order-saved { margin-top: 4px; font-size: 0.85rem; font-weight: 500; color: var(--vbwd-success, #047857); }
-.checkout-actions {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 15px;
-  padding-top: 10px;
-}
-.requirements {
-  background: var(--vbwd-booking-requirements-bg, #fff3cd);
-  padding: 15px;
-  border-radius: 8px;
-  margin: 15px 0;
-  border: 1px solid var(--vbwd-booking-requirements-border, #ffc107);
-}
-.requirements p { margin: 0 0 8px 0; color: var(--vbwd-booking-requirements-text, #856404); }
-.requirements ul { margin: 0; padding-left: 20px; color: var(--vbwd-booking-requirements-text, #856404); }
-.btn {
-  padding: 12px 24px;
-  border: none;
-  border-radius: 4px;
-  font-size: 1rem;
-  cursor: pointer;
-  text-decoration: none;
-  display: inline-block;
-  transition: background-color 0.2s;
-}
-.btn.primary { background-color: var(--vbwd-color-primary, #3498db); color: var(--vbwd-color-on-primary, #fff); }
-/* BookingCheckout.vue hovers :not(:disabled); BookingSuccess / BookingCancel hover
-   unconditionally. :disabled follows so a disabled pay button never darkens. */
-.btn.primary:hover,
-.btn.primary:hover:not(:disabled) { background-color: var(--vbwd-booking-button-primary-hover-bg, #2980b9); }
-.btn.primary:disabled {
-  background-color: var(--vbwd-booking-button-primary-disabled-bg, #95a5a6);
-  cursor: not-allowed;
-}
-.btn.secondary {
-  background-color: var(--vbwd-booking-button-secondary-bg, #ecf0f1);
-  color: var(--vbwd-color-text, #2c3e50);
-}
-.btn.secondary:hover { background-color: var(--vbwd-booking-button-secondary-hover-bg, #bdc3c7); }
-.pay-button { min-width: 180px; }
 @media (max-width: 600px) {
-  .checkout-actions { flex-direction: column; }
-  .btn { width: 100%; text-align: center; }
   .booking-resource-block { flex-direction: column; }
 }
 
 /* BookingSuccess.vue */
 .booking-success { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
 .booking-success .card { margin-bottom: 20px; }
+/* BookingSuccess / BookingCancel hover unconditionally (theme_checkout's shared rule hovers
+   :not(:disabled)); same token as the shared rule, so one override restyles both. */
+.booking-success .btn.primary:hover,
+.booking-cancel .btn.primary:hover { background-color: var(--vbwd-checkout-button-primary-hover-bg, #2980b9); }
 .confirmation-banner { padding: 30px; border-radius: 10px; text-align: center; margin-bottom: 24px; }
 .confirmation-banner h1 { margin: 0 0 8px; font-size: 1.6rem; }
 .confirmation-banner p { margin: 0; font-size: 1rem; }

@@ -7,6 +7,12 @@ literal colour appears only as the fallback of a ``var(--vbwd-…, <literal>)``
 token; every SPA colour of a used rule is ported with its exact literal (minus
 the justified :data:`EXCLUDED_DECLARATIONS`); every ``--vbwd-booking-*`` token is
 documented in the theme guide. The SPA-comparing half skips without fe-user.
+
+The checkout-wide rules the pay page shares (``.card``, ``.btn``, ``.public-checkout``,
+the states, the spinner) are theme_checkout's (S152-07c); theme_booking declares
+it as a dependency, so its stylesheet loads first. Class and colour coverage
+therefore count theme_checkout's CSS as available; booking's own CSS keeps only
+booking rules.
 """
 import re
 from pathlib import Path
@@ -18,8 +24,12 @@ from plugins.theme_booking.theme_booking.plugin_paths import (
     STYLESHEETS_DIRECTORY,
     TEMPLATES_DIRECTORY,
 )
+from plugins.theme_checkout.theme_checkout.plugin_paths import (
+    STYLESHEETS_DIRECTORY as CHECKOUT_STYLESHEETS_DIRECTORY,
+)
 from plugins.theme.tests.colour_tokens import (
     adapter_token_fallbacks,
+    css_declarations,
     documented_colour_tokens,
     token_fallback_mismatches,
     unported_spa_colours,
@@ -61,6 +71,21 @@ EXCLUDED_DECLARATIONS = {
     "BookingResourceDetail.vue | .ghrm-error | color: #6b7280": DEAD_IN_THE_SPA,
 }
 ADAPTER = "booking"
+# Unscoped rules of these classes are checkout-wide: theme_checkout owns them.
+CHECKOUT_WIDE_CLASSES = {
+    "public-checkout",
+    "loading-state",
+    "error-state",
+    "spinner",
+    "checkout-content",
+    "card",
+    "checkout-actions",
+    "requirements",
+    "btn",
+    "pay-button",
+    "order-saved",
+}
+LEADING_CLASS = re.compile(r"^\.([\w-]+)")
 
 # booking_success.html.j2 renders ``status-badge {{ success.status }}`` (BookingSuccess.vue
 # ``:class="invoiceStatus"``): the lower-cased invoice statuses the SPA styles.
@@ -75,11 +100,19 @@ needs_spa_checkouts = pytest.mark.skipif(
 )
 
 
-def _ported_css():
+def _css_text(directory):
     return "\n".join(
-        path.read_text(encoding="utf-8")
-        for path in sorted(STYLESHEETS_DIRECTORY.rglob("*.css"))
+        path.read_text(encoding="utf-8") for path in sorted(directory.rglob("*.css"))
     )
+
+
+def _ported_css():
+    return _css_text(STYLESHEETS_DIRECTORY)
+
+
+def _available_css():
+    """What a booking page is styled by: theme_checkout's CSS, then booking's."""
+    return _css_text(CHECKOUT_STYLESHEETS_DIRECTORY) + "\n" + _ported_css()
 
 
 def _used_styled_classes():
@@ -105,7 +138,7 @@ def test_all_source_style_files_exist():
 
 @needs_spa_checkouts
 def test_every_used_styled_class_has_a_ported_rule():
-    assert _used_styled_classes() - rule_classes(_ported_css()) == set()
+    assert _used_styled_classes() - rule_classes(_available_css()) == set()
 
 
 @needs_spa_checkouts
@@ -127,6 +160,23 @@ def test_the_ported_css_styles_the_booking_pages():
         assert class_name in ported
 
 
+def test_the_checkout_wide_rules_live_in_theme_checkout_not_here():
+    unscoped = {
+        selector
+        for selector, _property_name, _value in css_declarations(_ported_css())
+        if (leading := LEADING_CLASS.match(selector))
+        and leading.group(1) in CHECKOUT_WIDE_CLASSES
+    }
+
+    assert unscoped == set()
+
+
+def test_theme_checkout_styles_the_shared_pay_page_classes():
+    assert CHECKOUT_WIDE_CLASSES <= rule_classes(
+        _css_text(CHECKOUT_STYLESHEETS_DIRECTORY)
+    )
+
+
 def test_the_ported_css_carries_no_hard_coded_colour():
     assert hard_coded_colours(_ported_css()) == []
 
@@ -134,7 +184,7 @@ def test_the_ported_css_carries_no_hard_coded_colour():
 @needs_spa_checkouts
 def test_every_spa_colour_of_a_used_rule_is_ported_with_its_literal():
     unported = unported_spa_colours(
-        SOURCE_STYLE_FILES, _ported_css(), _used_styled_classes()
+        SOURCE_STYLE_FILES, _available_css(), _used_styled_classes()
     )
 
     assert sorted(set(unported) - set(EXCLUDED_DECLARATIONS)) == []
@@ -143,7 +193,7 @@ def test_every_spa_colour_of_a_used_rule_is_ported_with_its_literal():
 @needs_spa_checkouts
 def test_every_declaration_exclusion_is_still_an_unported_spa_colour():
     unported = unported_spa_colours(
-        SOURCE_STYLE_FILES, _ported_css(), _used_styled_classes()
+        SOURCE_STYLE_FILES, _available_css(), _used_styled_classes()
     )
 
     assert set(EXCLUDED_DECLARATIONS) <= set(unported)
