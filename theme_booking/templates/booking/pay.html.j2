@@ -1,0 +1,23 @@
+{#- /booking/<slug>/book/pay — fe-user BookingCheckout (noLayout: no site chrome). The form is
+    theme_checkout's island over the booking source; the runtime posts the pending booking. -#}
+{% extends "_shared/document.html.j2" %}
+{% block title %}{{ _('booking.checkout.title') }}{% endblock %}
+{% block body %}
+  <div class="public-checkout">
+    <h1 data-testid="checkout-title">{{ _('booking.checkout.title') }}</h1>
+    <div class="booking-pay-island" id="booking-pay-island" data-vbwd-booking-pending
+      hx-post="{{ pay_form_url }}"
+      hx-trigger="load, vbwd:session-started from:body, vbwd:session-ended from:body"
+      hx-swap="innerHTML" hx-vals='{"source": "booking"}'>
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>{{ _('booking.form.loading') }}</p>
+      </div>
+    </div>
+  </div>
+{%- endblock %}
+{% block scripts %}
+{{- super() }}
+  <script>{% include "checkout/partials/checkout_runtime.js" %}</script>
+  <script>{% include "booking/partials/booking_runtime.js" %}</script>
+{%- endblock %}

@@ -1,0 +1,18 @@
+{#- GET /_render/_fragment/booking/slots — one day's slots (fetchAvailability). Each swap
+    resets the picked slot: the hidden start / end travel with the list. -#}
+<input type="hidden" name="start" value="" data-vbwd-booking-start>
+<input type="hidden" name="end" value="" data-vbwd-booking-end>
+{%- if state == 'slots' %}
+<div class="booking-slots-grid">
+  {%- for slot in slots %}
+  <button type="button" class="booking-slot{% if slot.full %} full{% endif %}" data-vbwd-booking-slot data-start="{{ slot.start }}" data-end="{{ slot.end }}"{% if slot.full %} disabled{% endif %}>
+    <span class="booking-slot__time">{{ slot.label }}</span>
+    <span class="booking-slot__capacity">{{ _('booking.detail.available', count=slot.capacity) }}</span>
+  </button>
+  {%- endfor %}
+</div>
+{%- elif state == 'no_slots' %}
+<p class="ghrm-muted">{{ _('booking.detail.noSlots') }}</p>
+{%- else %}
+<p class="ghrm-muted">{{ _('booking.detail.pickDate') }}</p>
+{%- endif %}

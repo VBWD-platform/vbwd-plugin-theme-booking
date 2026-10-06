@@ -1,0 +1,80 @@
+{#- The BookingResourceDetail CMS widget — BookingResourceDetail.vue. "Book Now" is a GET form
+    to the booking form route; the slots load as a fragment when the date changes. -#}
+{%- from "checkout/_price_display.html.j2" import price_display -%}
+{%- from "cms/macros/tags_custom_fields.html.j2" import tag_chips, custom_fields_display -%}
+{%- set detail = component_context -%}
+<div class="ghrm-detail">
+  {%- if detail.state == 'not_found' %}
+  <div class="ghrm-error">{{ _('booking.detail.notFound') }}</div>
+  {%- else %}
+  {%- set resource = detail.resource %}
+  {%- if resource.images %}
+  <div class="booking-gallery" data-vbwd-booking-gallery>
+    <div class="booking-gallery__main">
+      <img src="{{ resource.active_image_url }}" alt="{{ resource.name }}" class="booking-gallery__main-img" data-vbwd-booking-main-image>
+    </div>
+    {%- if resource.images|length > 1 %}
+    <div class="booking-gallery__thumbs">
+      {%- for image in resource.images %}
+      <button type="button" class="booking-gallery__thumb{% if image.url == resource.active_image_url %} active{% endif %}" data-vbwd-booking-thumb="{{ image.url }}"><img src="{{ image.url }}" alt="{{ image.alt }}"></button>
+      {%- endfor %}
+    </div>
+    {%- endif %}
+  </div>
+  {%- endif %}
+  <div class="ghrm-detail-header">
+    {%- if resource.show_header_icon %}
+    <img src="{{ resource.image_url }}" alt="{{ resource.name }}" class="ghrm-detail-icon">
+    {%- endif %}
+    <div class="ghrm-detail-meta">
+      <h1 class="ghrm-detail-name">{{ resource.name }}</h1>
+      <p class="ghrm-detail-author">{{ resource.resource_type }}</p>
+      <div class="ghrm-detail-badges">
+        <span class="ghrm-badge ghrm-badge--version">{{ price_display(resource.price) }} / {{ resource.price_unit }}</span>
+        {%- if resource.capacity > 1 %}
+        <span class="ghrm-badge ghrm-badge--downloads">{{ _('booking.catalogue.spots', count=resource.capacity) }}</span>
+        {%- endif %}
+        {%- for category in resource.categories %}
+        <span class="ghrm-badge ghrm-badge--downloads">{{ category }}</span>
+        {%- endfor %}
+      </div>
+    </div>
+  </div>
+  {%- if resource.description %}
+  <p class="ghrm-detail-description">{{ resource.description }}</p>
+  {%- endif %}
+  {%- if resource.tags_custom_fields %}
+  <div class="booking-tags-custom-fields" data-testid="resource-tags-custom-fields">{{ tag_chips(resource.tags_custom_fields.tags) }}{{ custom_fields_display(resource.tags_custom_fields.custom_fields) }}</div>
+  {%- endif %}
+  <form class="booking-book" method="get" action="{{ detail.form_action }}" data-vbwd-booking-book>
+    <div class="ghrm-features">
+      <h3 class="ghrm-section-label">{{ _('booking.detail.availability') }}</h3>
+      {%- if detail.is_flexible %}
+      <div class="booking-date-picker">
+        <label>{{ _('booking.form.checkIn') }}</label>
+        <input type="date" name="date" min="{{ detail.today }}" data-vbwd-booking-check-in>
+      </div>
+      <div class="booking-date-picker">
+        <label>{{ _('booking.form.checkOut') }}</label>
+        <input type="date" name="end_date" min="{{ detail.today }}" data-vbwd-booking-check-out>
+      </div>
+      {%- else %}
+      <div class="booking-date-picker">
+        <label>{{ _('booking.detail.selectDate') }}</label>
+        <input type="date" name="date" min="{{ detail.today }}" hx-get="{{ detail.slots_url }}" hx-trigger="change" hx-target="#booking-slots" hx-swap="innerHTML" hx-vals='{{ {"resource": detail.slug}|tojson }}'>
+      </div>
+      <div id="booking-slots">
+        {%- with state = 'pick_date' %}{% include "booking/_slots.html.j2" %}{% endwith %}
+      </div>
+      {%- endif %}
+    </div>
+    <div class="ghrm-detail-cta-section">
+      <button type="submit" class="ghrm-cta-btn" disabled data-vbwd-booking-book-now>{{ _('booking.detail.bookNow') }}</button>
+    </div>
+  </form>
+  <div class="booking-back">
+    <a href="/booking" class="booking-back-link">← {{ _('booking.detail.backToCatalogue') }}</a>
+  </div>
+  {%- endif %}
+</div>
+<script>{% include "booking/partials/booking_runtime.js" %}</script>

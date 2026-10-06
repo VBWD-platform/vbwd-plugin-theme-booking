@@ -1,0 +1,64 @@
+{#- The BookingCatalogue CMS widget — BookingCatalogue.vue + fe-core CatalogueFilterBar. One GET
+    form (works without JS); htmx swaps the whole catalogue from the resources fragment. -#}
+{%- from "checkout/_price_display.html.j2" import price_display -%}
+{%- from "cms/macros/catalogue_filter_bar.html.j2" import catalogue_filter_bar -%}
+{%- set catalogue = component_context -%}
+{%- set filters = catalogue.filters -%}
+{%- set is_grid = catalogue.view_mode == 'grid' -%}
+<div class="booking-catalogue" data-testid="booking-catalogue">
+  <form id="booking-catalogue-form" method="get" action="{{ catalogue.form_action }}" hx-get="/_render/_fragment/booking/resources" hx-trigger="submit, change" hx-target="closest .booking-catalogue" hx-swap="outerHTML">
+    <input type="hidden" name="catalog_path" value="{{ catalogue.form_action }}">
+    <input type="hidden" name="tags" value="{{ filters.tags|join(',') }}">
+    <input type="hidden" name="view" value="{{ catalogue.view_mode }}">
+    <div class="booking-catalogue__header">
+      <h1 class="booking-catalogue__title">{{ _('booking.catalogue.title') }}</h1>
+      <div class="booking-catalogue__controls">
+        <input id="booking-catalogue-search" class="booking-catalogue__search" type="text" name="q" value="{{ filters.q }}" placeholder="{{ _('booking.catalogue.search') }}" data-testid="booking-catalogue-search" hx-get="/_render/_fragment/booking/resources" hx-trigger="input changed delay:300ms" hx-include="closest form" hx-target="closest .booking-catalogue" hx-swap="outerHTML">
+        <button class="booking-catalogue__view-toggle" type="submit" name="toggle_view" value="1" title="{{ _('booking.catalogue.switchToList') if is_grid else _('booking.catalogue.switchToGrid') }}">{{ '☰' if is_grid else '⊞' }}</button>
+      </div>
+    </div>
+    {{ catalogue_filter_bar(catalogue.facets, filters, _('booking.catalogue.all')) }}
+  </form>
+  {%- if catalogue.state == 'error' %}
+  <div class="ghrm-empty" data-testid="booking-catalogue-error">{{ catalogue.error }}</div>
+  {%- elif catalogue.state == 'empty' %}
+  <div class="ghrm-empty" data-testid="booking-catalogue-empty">{{ _('booking.catalogue.noResources') }}</div>
+  {%- else %}
+  <div class="{% if is_grid %}ghrm-grid{% else %}ghrm-list{% endif %}">
+    {%- for resource in catalogue.resources %}
+    <a href="{{ resource.href }}" class="{% if is_grid %}ghrm-pkg-card{% else %}ghrm-pkg-row{% endif %}" data-testid="booking-resource-card-{{ resource.slug }}">
+      {%- if resource.image_url %}
+      <img src="{{ resource.image_url }}" alt="{{ resource.name }}" class="ghrm-pkg-icon">
+      {%- endif %}
+      <div class="ghrm-pkg-info">
+        <span class="ghrm-pkg-name" data-testid="booking-resource-name">{{ resource.name }}</span>
+        <span class="ghrm-pkg-author">{{ resource.resource_type }}</span>
+        {%- if resource.description %}
+        <span class="ghrm-pkg-description">{{ resource.description }}</span>
+        {%- endif %}
+        {%- if resource.tags %}
+        <div class="booking-card-tags">
+          {%- for tag in resource.tags %}
+          <button type="submit" form="booking-catalogue-form" name="toggle_tag" value="{{ tag.slug }}" class="booking-card-tag{% if tag.active %} booking-card-tag--active{% endif %}" data-testid="booking-resource-tag-{{ resource.slug }}-{{ tag.slug }}">{{ tag.label }}</button>
+          {%- endfor %}
+        </div>
+        {%- endif %}
+      </div>
+      <div class="booking-card-meta">
+        <span class="booking-price">{{ price_display(resource.price) }} / {{ resource.price_unit }}</span>
+        {%- if resource.capacity > 1 %}
+        <span class="ghrm-pkg-downloads">{{ _('booking.catalogue.spots', count=resource.capacity) }}</span>
+        {%- endif %}
+      </div>
+    </a>
+    {%- endfor %}
+  </div>
+  {%- endif %}
+  {%- if catalogue.pager %}
+  <div class="booking-catalogue__pager" data-testid="booking-catalogue-pager">
+    <button type="submit" form="booking-catalogue-form" name="page" value="{{ catalogue.pager.previous or 1 }}" data-testid="booking-catalogue-prev"{% if not catalogue.pager.previous %} disabled{% endif %}>←</button>
+    <span>{{ catalogue.pager.current }} / {{ catalogue.pager.total }}</span>
+    <button type="submit" form="booking-catalogue-form" name="page" value="{{ catalogue.pager.next or catalogue.pager.total }}" data-testid="booking-catalogue-next"{% if not catalogue.pager.next %} disabled{% endif %}>→</button>
+  </div>
+  {%- endif %}
+</div>

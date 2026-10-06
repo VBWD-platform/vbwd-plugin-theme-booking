@@ -1,0 +1,19 @@
+{#- fe-user PriceBreakdown.vue — net, one line per tax, gross (formatted amounts). -#}
+{%- macro price_breakdown(breakdown, testid) -%}
+<div class="price-breakdown" data-testid="{{ testid }}">
+  <div class="price-breakdown__row price-breakdown__row--net" data-testid="price-breakdown-net">
+    <span class="price-breakdown__label">{{ _('price.net') }}</span>
+    <span class="price-breakdown__value">{{ breakdown.net }}</span>
+  </div>
+  {%- for tax in breakdown.taxes %}
+  <div class="price-breakdown__row price-breakdown__row--tax" data-testid="price-breakdown-tax-line">
+    <span class="price-breakdown__label">{{ _('price.taxLine', name=tax.label_name, rate=tax.rate) }}</span>
+    <span class="price-breakdown__value">{{ tax.amount }}</span>
+  </div>
+  {%- endfor %}
+  <div class="price-breakdown__row price-breakdown__row--gross" data-testid="price-breakdown-gross">
+    <span class="price-breakdown__label">{{ _('price.gross') }}</span>
+    <span class="price-breakdown__value">{{ breakdown.gross }}</span>
+  </div>
+</div>
+{%- endmacro -%}

@@ -1,0 +1,57 @@
+"""Metadata + baseline-config contract for the theme_booking plugin (S152-00b, S152-09)."""
+import json
+from pathlib import Path
+
+from plugins.theme_booking import ThemeBookingPlugin
+
+PLUGIN_DIRECTORY = Path(__file__).resolve().parents[2]
+
+
+def _load_plugin_json(file_name: str) -> dict:
+    return json.loads((PLUGIN_DIRECTORY / file_name).read_text(encoding="utf-8"))
+
+
+def test_metadata_name_is_the_manifest_key():
+    assert ThemeBookingPlugin().metadata.name == "theme_booking"
+
+
+def test_metadata_version():
+    assert ThemeBookingPlugin().metadata.version == "1.0.0"
+
+
+def test_dependencies_are_exactly_declared():
+    assert ThemeBookingPlugin().metadata.dependencies == [
+        "theme>=1.0",
+        "booking",
+        "theme_checkout",
+        "theme_cms",
+    ]
+
+
+def test_mounts_no_blueprint_of_its_own():
+    plugin = ThemeBookingPlugin()
+
+    assert plugin.get_url_prefix() == ""
+    assert plugin.get_blueprint() is None
+
+
+def test_admin_config_fields_all_exist_in_config():
+    config = _load_plugin_json("config.json")
+    admin_config = _load_plugin_json("admin-config.json")
+    admin_field_keys = [
+        field["key"] for tab in admin_config["tabs"] for field in tab["fields"]
+    ]
+
+    assert admin_field_keys
+    assert set(admin_field_keys) <= set(config)
+
+
+def test_debug_mode_toggle_defaults_off():
+    assert _load_plugin_json("config.json")["debug_mode"]["default"] is False
+
+
+def test_the_booking_form_slug_defaults_to_the_fe_user_default():
+    """fe-user ``plugins/booking/config.json`` ``booking.booking_form_slug``."""
+    assert _load_plugin_json("config.json")["booking_form_slug"]["default"] == (
+        "booking-form"
+    )

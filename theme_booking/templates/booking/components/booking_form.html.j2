@@ -1,0 +1,63 @@
+{#- The BookingForm CMS widget — BookingForm.vue. The runtime keeps the submitted fields in
+    sessionStorage (the SPA's store.pendingCheckout) and opens the pay page. -#}
+{%- set booking = component_context -%}
+<div class="ghrm-detail">
+  {%- if booking.state == 'not_found' %}
+  <div class="ghrm-error">{{ _('booking.form.notFound') }}</div>
+  {%- else %}
+  <div class="ghrm-detail-header">
+    {%- if booking.resource.image_url %}
+    <img src="{{ booking.resource.image_url }}" alt="{{ booking.resource.name }}" class="ghrm-detail-icon">
+    {%- endif %}
+    <div class="ghrm-detail-meta">
+      <h1 class="ghrm-detail-name">{{ _('booking.form.bookTitle', name=booking.resource.name) }}</h1>
+      <p class="ghrm-detail-author">{{ booking.resource.summary_line }}</p>
+    </div>
+  </div>
+  <div class="booking-slot-summary">
+    <div class="booking-slot-summary__row">
+      <span class="booking-slot-summary__label">{{ _('booking.checkout.dateTime') }}</span>
+      <span>{{ booking.display_date_time }}</span>
+    </div>
+  </div>
+  <form class="booking-form" method="post" action="{{ booking.pay_path }}" data-vbwd-booking-form>
+    <input type="hidden" name="resource_slug" value="{{ booking.resource_slug }}">
+    <input type="hidden" name="start_at" value="{{ booking.start_at }}">
+    <input type="hidden" name="end_at" value="{{ booking.end_at }}">
+    {%- if booking.custom_fields %}
+    <div class="booking-form__section">
+      <h3 class="ghrm-section-label">{{ _('booking.form.additionalInfo') }}</h3>
+      {%- for field in booking.custom_fields %}
+      <div class="booking-form__field">
+        <label for="field-{{ field.id }}">
+          {{ field.label }}
+          {%- if field.required %}
+          <span class="booking-form__required">*</span>
+          {%- endif %}
+        </label>
+        {%- if field.input == 'text' %}
+        <input id="field-{{ field.id }}" type="text" name="custom_fields.{{ field.id }}"{% if field.required %} required{% endif %} class="booking-form__input">
+        {%- elif field.input == 'number' %}
+        <input id="field-{{ field.id }}" type="number" name="custom_fields.{{ field.id }}"{% if field.required %} required{% endif %} class="booking-form__input">
+        {%- elif field.input == 'checkbox' %}
+        <label class="booking-form__checkbox">
+          <input id="field-{{ field.id }}" type="checkbox" name="custom_fields.{{ field.id }}">
+          {{ field.label }}
+        </label>
+        {%- endif %}
+      </div>
+      {%- endfor %}
+    </div>
+    {%- endif %}
+    <div class="booking-form__section">
+      <h3 class="ghrm-section-label">{{ _('booking.form.notes') }}</h3>
+      <textarea name="notes" class="booking-form__input" rows="3" placeholder="{{ _('booking.form.notesPlaceholder') }}"></textarea>
+    </div>
+    <div class="booking-form__actions">
+      <button type="submit" class="ghrm-cta-btn">{{ _('booking.form.confirmBooking') }}</button>
+      <a href="{{ booking.back_href }}" class="booking-back-link">{{ _('booking.form.cancel') }}</a>
+    </div>
+  </form>
+  {%- endif %}
+</div>
+<script>{% include "booking/partials/booking_runtime.js" %}</script>

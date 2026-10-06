@@ -1,0 +1,12 @@
+{#- The BookingCancel CMS widget — BookingCancel.vue ("Try Again" is router.back()). -#}
+<div class="booking-cancel">
+  <div class="cancel-banner">
+    <h1>{{ _('booking.cancel.title') }}</h1>
+    <p>{{ _('booking.cancel.message') }}</p>
+  </div>
+  <div class="cancel-actions">
+    <a href="/booking" class="btn primary">{{ _('booking.cancel.browseCatalogue') }}</a>
+    <a href="#" class="btn secondary" data-vbwd-history-back>{{ _('booking.cancel.tryAgain') }}</a>
+  </div>
+</div>
+<script>{% include "booking/partials/booking_runtime.js" %}</script>

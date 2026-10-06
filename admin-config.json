@@ -1,0 +1,22 @@
+{
+  "tabs": [
+    {
+      "id": "general",
+      "label": "General",
+      "fields": [
+        {
+          "key": "debug_mode",
+          "label": "Debug logging",
+          "component": "checkbox"
+        },
+        {
+          "key": "booking_form_slug",
+          "label": "Booking Form Page Slug",
+          "component": "input",
+          "inputType": "text",
+          "description": "CMS page slug for the booking form (used by Book Now). Restart the api after a change."
+        }
+      ]
+    }
+  ]
+}

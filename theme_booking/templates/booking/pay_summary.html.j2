@@ -1,0 +1,35 @@
+{#- BookingCheckout's order summary lines (the booking source's summary template). -#}
+{%- from "checkout/_price_display.html.j2" import price_display -%}
+<div class="booking-resource-block">
+  {%- if summary.resource.image_url %}
+  <img src="{{ summary.resource.image_url }}" alt="{{ summary.resource.name }}" class="booking-resource-image">
+  {%- endif %}
+  <div class="booking-resource-info">
+    <div class="plan-row">
+      <a href="{{ summary.resource.href }}" class="booking-resource-name">{{ summary.resource.name }}</a>
+      <span class="booking-resource-price" data-testid="resource-price">{{ price_display(summary.resource.price) }}</span>
+    </div>
+    <p class="plan-description">{{ summary.resource.resource_type }}</p>
+    {%- if summary.resource.description %}
+    <p class="plan-description">{{ summary.resource.description }}</p>
+    {%- endif %}
+  </div>
+</div>
+<div class="booking-details-block">
+  <div class="booking-detail-row">
+    <span>{{ _('booking.checkout.dateTime') }}</span>
+    <span>{{ summary.date_time }}</span>
+  </div>
+  {%- if summary.notes %}
+  <div class="booking-detail-row">
+    <span>{{ _('booking.checkout.notes') }}</span>
+    <span>{{ summary.notes }}</span>
+  </div>
+  {%- endif %}
+  {%- for field_name, field_value in summary.custom_fields %}
+  <div class="booking-detail-row">
+    <span>{{ field_name }}</span>
+    <span>{{ field_value }}</span>
+  </div>
+  {%- endfor %}
+</div>

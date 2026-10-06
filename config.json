@@ -1,0 +1,12 @@
+{
+  "debug_mode": {
+    "type": "boolean",
+    "default": false,
+    "description": "Verbose logging for this plugin."
+  },
+  "booking_form_slug": {
+    "type": "string",
+    "default": "booking-form",
+    "description": "CMS page slug of the booking form (fe-user booking config booking_form_slug). Read at boot: restart the api after a change."
+  }
+}

@@ -1,0 +1,50 @@
+{#- BookingConfirmationDetails.vue — a /checkout/confirmation section: theme_checkout wraps it
+    in the `.card` the SPA puts on the component root; `section.context` is its data. -#}
+{%- set details = section.context -%}
+<h2>{{ _('booking.confirmation.resourceDetails') }}</h2>
+<div class="booking-resource-block">
+  {%- if details.resource.image_url %}
+  <img src="{{ details.resource.image_url }}" alt="{{ details.resource.name }}" class="booking-resource-image">
+  {%- endif %}
+  <div class="booking-resource-info">
+    <a href="{{ details.resource.href }}" class="resource-name-link">
+      <h3>{{ details.resource.name }}</h3>
+    </a>
+    {%- if details.resource.description %}
+    <p class="resource-description">{{ details.resource.description }}</p>
+    {%- endif %}
+  </div>
+</div>
+<div class="booking-price-info">
+  <span class="booking-price">{{ details.price_line }}</span>
+</div>
+<h3>{{ _('booking.confirmation.bookingDetails') }}</h3>
+<div class="booking-details-grid">
+  <div class="detail-row">
+    <span class="detail-label">{{ _('booking.checkout.dateTime') }}</span>
+    <span class="detail-value">{{ details.date_time }}</span>
+  </div>
+  {%- if details.quantity %}
+  <div class="detail-row">
+    <span class="detail-label">{{ _('booking.checkout.quantity') }}</span>
+    <span class="detail-value">{{ details.quantity }}</span>
+  </div>
+  {%- endif %}
+</div>
+{%- if details.custom_fields %}
+<div class="booking-custom-fields">
+  <h3 class="section-label">{{ _('booking.checkout.additionalInfo') }}</h3>
+  {%- for field_name, field_value in details.custom_fields %}
+  <div class="detail-row">
+    <span class="detail-label">{{ field_name }}</span>
+    <span class="detail-value">{{ field_value }}</span>
+  </div>
+  {%- endfor %}
+</div>
+{%- endif %}
+{%- if details.notes %}
+<div class="booking-notes">
+  <h3 class="section-label">{{ _('booking.checkout.notes') }}</h3>
+  <p>{{ details.notes }}</p>
+</div>
+{%- endif %}

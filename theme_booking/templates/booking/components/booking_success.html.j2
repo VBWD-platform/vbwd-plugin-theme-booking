@@ -1,0 +1,82 @@
+{#- The BookingSuccess CMS widget — BookingSuccess.vue (a personalised region: the anonymous
+    render is the pending banner; the viewer's re-render reads the invoice). -#}
+{%- from "booking/_price_breakdown.html.j2" import price_breakdown -%}
+{%- set success = component_context -%}
+<div class="booking-success">
+  <div class="confirmation-banner confirmation-banner--{{ success.status }}">
+    <h1>{{ _(success.title_key) }}</h1>
+    <p>{{ _(success.message_key) }}</p>
+  </div>
+  {%- if success.invoice %}
+  {%- set invoice = success.invoice %}
+  <div class="card">
+    <h2>{{ _('booking.success.invoiceDetails') }}</h2>
+    <div class="confirmation-grid">
+      {%- if invoice.number %}
+      <div class="confirmation-row">
+        <span class="confirmation-label">{{ _('booking.success.invoiceNumber') }}</span>
+        <span class="confirmation-value confirmation-mono">{{ invoice.number }}</span>
+      </div>
+      {%- endif %}
+      <div class="confirmation-row">
+        <span class="confirmation-label">{{ _('booking.success.status') }}</span>
+        <span class="confirmation-value"><span class="status-badge {{ success.status }}">{{ success.status }}</span></span>
+      </div>
+      {%- if invoice.breakdown %}
+      <div class="confirmation-row">
+        <span class="confirmation-label">{{ _('booking.success.amount') }}</span>
+        <span class="confirmation-value">{{ price_breakdown(invoice.breakdown, 'booking-breakdown') }}</span>
+      </div>
+      {%- endif %}
+      {%- if invoice.paid_at %}
+      <div class="confirmation-row">
+        <span class="confirmation-label">{{ _('booking.success.paidAt') }}</span>
+        <span class="confirmation-value">{{ invoice.paid_at }}</span>
+      </div>
+      {%- endif %}
+    </div>
+  </div>
+  {%- endif %}
+  {%- if success.booking %}
+  {%- set booking = success.booking %}
+  <div class="card">
+    <h2>{{ _('booking.success.bookingDetails') }}</h2>
+    <div class="booking-resource-block">
+      {%- if booking.resource.image_url %}
+      <img src="{{ booking.resource.image_url }}" alt="{{ booking.resource.name }}" class="booking-resource-image">
+      {%- endif %}
+      <div class="booking-resource-info">
+        <a href="{{ booking.resource.href }}" class="booking-resource-name">{{ booking.resource.name }}</a>
+        <p class="resource-type">{{ booking.resource.resource_type }}</p>
+        {%- if booking.resource.description %}
+        <p class="resource-desc">{{ booking.resource.description }}</p>
+        {%- endif %}
+      </div>
+    </div>
+    <div class="confirmation-grid">
+      {%- if booking.date_time %}
+      <div class="confirmation-row">
+        <span class="confirmation-label">{{ _('booking.checkout.dateTime') }}</span>
+        <span class="confirmation-value">{{ booking.date_time }}</span>
+      </div>
+      {%- endif %}
+      {%- for field_name, field_value in booking.custom_fields %}
+      <div class="confirmation-row">
+        <span class="confirmation-label">{{ field_name }}</span>
+        <span class="confirmation-value">{{ field_value }}</span>
+      </div>
+      {%- endfor %}
+      {%- if booking.notes %}
+      <div class="confirmation-row">
+        <span class="confirmation-label">{{ _('booking.checkout.notes') }}</span>
+        <span class="confirmation-value">{{ booking.notes }}</span>
+      </div>
+      {%- endif %}
+    </div>
+  </div>
+  {%- endif %}
+  <div class="checkout-actions">
+    <a href="/booking" class="btn secondary">{{ _('booking.detail.backToCatalogue') }}</a>
+    <a href="/dashboard/bookings" class="btn primary">{{ _('booking.success.viewBookings') }}</a>
+  </div>
+</div>
