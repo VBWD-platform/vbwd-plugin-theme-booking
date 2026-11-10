@@ -274,14 +274,13 @@ def test_a_refused_booking_shows_the_api_message(client, bearer, resource):
 def test_the_success_and_cancel_cms_pages_render_with_their_layout(client, resource):
     success = _page(client, "/booking-success")
     cancel = _page(client, "/booking-cancel")
-    spa_success_route = _page(client, "/booking/success")
+    # ``/booking/success`` names no resource: the labelled themed 404 (S154 D7).
+    spa_success_route = client.get("/booking/success", headers=RENDER)
 
     assert re.search(r"<h1>\s*Payment Processing\s*</h1>", success)
     assert re.search(r"<h1>\s*Payment Cancelled\s*</h1>", cancel)
-    assert re.search(r"(?s)<nav[^>]*>.*?<a ", spa_success_route)
-    assert re.search(
-        r'<div class="ghrm-error">\s*Resource not found\s*</div>', spa_success_route
-    )
+    assert spa_success_route.status_code == 404
+    assert spa_success_route.headers.get("X-VBWD-Not-Found") == "1"
 
 
 def test_a_disabled_fe_user_booking_plugin_404s_its_pages_and_fragments(
@@ -300,3 +299,59 @@ def test_a_disabled_fe_user_booking_plugin_404s_its_pages_and_fragments(
         assert client.post(PAY_FORM, data={"source": "booking"}).status_code == 404
     finally:
         write_manifest(manifest, FE_USER_PLUGINS)
+
+
+# ── S154 D7: the resource page head follows seo_index_resources ──────────────
+
+
+def _head(html):
+    return html.partition("</head>")[0]
+
+
+@pytest.fixture
+def booking_config(app):
+    """Save booking config values for one test; restore the saved blob after."""
+    store = app.config_store
+    saved = dict(store.get_config("booking") or {})
+
+    def save(**values):
+        store.save_config("booking", {**saved, **values})
+
+    yield save
+    store.save_config("booking", saved)
+
+
+def test_the_resource_page_is_indexable_with_a_self_canonical(client, resource):
+    head = _head(_page(client, f"/booking/{resource['slug']}"))
+
+    assert '<meta name="robots" content="index,follow" data-seo="ssr">' in head
+    canonical = re.search(r'<link rel="canonical" href="([^"]*)" data-seo="ssr">', head)
+    assert canonical.group(1).endswith(f"/booking/{resource['slug']}")
+    assert re.search(rf"<title>{RESOURCE_NAME}( — [^<]+)?</title>", head)
+
+
+def test_a_switched_off_resource_page_is_noindex_follow(
+    client, resource, booking_config
+):
+    booking_config(seo_index_resources=False)
+
+    head = _head(_page(client, f"/booking/{resource['slug']}"))
+
+    assert '<meta name="robots" content="noindex,follow" data-seo="ssr">' in head
+
+
+def test_a_missing_or_inactive_resource_is_the_labelled_themed_404(
+    client, admin_headers, resource
+):
+    deactivated = client.put(
+        f"/api/v1/admin/booking/resources/{resource['id']}",
+        json={"is_active": False},
+        headers=admin_headers,
+    )
+    assert deactivated.status_code == 200, deactivated.get_json()
+
+    for slug in ("s154-d7-no-such-resource", resource["slug"]):
+        response = client.get(f"/booking/{slug}", headers=RENDER)
+
+        assert response.status_code == 404, slug
+        assert response.headers.get("X-VBWD-Not-Found") == "1", slug

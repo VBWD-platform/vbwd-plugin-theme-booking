@@ -3,7 +3,8 @@
 fe-user mounts ``/booking``, ``/booking/:slug`` and ``/<bookingFormSlug>/:slug`` as
 ``CmsPage`` with fixed slugs (``booking``, ``booking-resource-detail``, the form
 slug): each themed route renders that CMS page through theme_cms's pipeline with
-the route params in context (S152-06 §7). ``/booking/:slug/book/pay`` is the
+the route params in context (S152-06 §7); ``/booking/:slug`` also gives that page
+the resource's own SEO head (S154 D7). ``/booking/:slug/book/pay`` is the
 standalone (noLayout) pay page; its island and confirm fragments are
 theme_checkout's own builders over theme_booking's private source registry.
 """
@@ -26,6 +27,7 @@ from plugins.theme_cms.theme_cms.registries import ComponentTemplate
 from .booking_form import BookingForm
 from .catalogue import BookingCatalogue
 from .resource_detail import SLOTS_FRAGMENT_PATH, BookingResourceDetail, SlotPicker
+from .resource_page_seo import BookingResourcePageSeo
 from .success import BookingSuccess
 
 BOOKING_FE_USER_PLUGIN = "booking"
@@ -68,13 +70,22 @@ def _pay_page_context(theme_request: ThemeRequest) -> Dict[str, Any]:
 
 def booking_pages(cms_pages: Any, booking_form_slug: str) -> List[ThemePage]:
     cms_routes = (
-        ("/booking", "booking_catalogue", "booking"),
-        ("/booking/<slug>", "booking_resource", "booking-resource-detail"),
-        (f"/{booking_form_slug}/<slug>", "booking_form", booking_form_slug),
+        ("/booking", "booking_catalogue", _cms_page_context(cms_pages, "booking")),
+        # The resource page owns its SEO head (S154 D7).
+        (
+            "/booking/<slug>",
+            "booking_resource",
+            BookingResourcePageSeo(cms_pages).context,
+        ),
+        (
+            f"/{booking_form_slug}/<slug>",
+            "booking_form",
+            _cms_page_context(cms_pages, booking_form_slug),
+        ),
     )
     pages = [
-        _page(rule, endpoint, DISPATCH_TEMPLATE, _cms_page_context(cms_pages, slug))
-        for rule, endpoint, slug in cms_routes
+        _page(rule, endpoint, DISPATCH_TEMPLATE, build_context)
+        for rule, endpoint, build_context in cms_routes
     ]
     pages.append(
         _page(

@@ -17,7 +17,8 @@ from plugins.theme_cms.theme_cms.components.catalogue_filters import (
 BOOKING_API_PREFIX = f"{API_PREFIX}/booking"
 
 
-def _segment(value: str) -> str:
+def path_segment(value: str) -> str:
+    """One URL path segment (``/`` escaped too)."""
     return quote(value, safe="")
 
 
@@ -40,11 +41,11 @@ class BookingApi:
         return self._get(f"{BOOKING_API_PREFIX}/resources", query=dict(query))
 
     def resource(self, slug: str) -> Any:
-        return self._get(f"{BOOKING_API_PREFIX}/resources/{_segment(slug)}")
+        return self._get(f"{BOOKING_API_PREFIX}/resources/{path_segment(slug)}")
 
     def availability(self, slug: str, date: str) -> Any:
         return self._get(
-            f"{BOOKING_API_PREFIX}/resources/{_segment(slug)}/availability",
+            f"{BOOKING_API_PREFIX}/resources/{path_segment(slug)}/availability",
             query={"date": date},
         )
 

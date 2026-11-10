@@ -243,9 +243,11 @@ INVOICE_CONTRACT = [
     ),
     (".pay-button", INVOICE, 168, "island", PAY_BUTTON),
 ]
+# ``/booking/success`` is no resource: since S154 D7 the themed resource page is
+# the labelled 404 there (no layout nav), so the spec's ``nav a`` check (line
+# 111) is not pinned; the fe-user slice realigns that spec.
 AUTHORIZE_CONTRACT = [
     ("/booking/success", AUTHORIZE, 106, "spa_success_route", r"<html"),
-    ("nav a", AUTHORIZE, 111, "spa_success_route", r"(?s)<nav[^>]*>.*?<a "),
 ]
 CONTRACT = BOOKING_CONTRACT + CHECKOUT_CONTRACT + INVOICE_CONTRACT + AUTHORIZE_CONTRACT
 
@@ -309,7 +311,9 @@ def test_every_booking_spec_selector_is_in_the_themed_output(
         "confirmation": regions_html(
             client, bearer, f"/checkout/confirmation?invoice_id={invoice_id}"
         ),
-        "spa_success_route": _text(client.get("/booking/success", headers=RENDER)),
+        "spa_success_route": client.get("/booking/success", headers=RENDER).get_data(
+            as_text=True
+        ),
     }
 
     assert contract_misses(CONTRACT, outputs) == []

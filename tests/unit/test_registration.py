@@ -22,6 +22,9 @@ from plugins.theme_booking.theme_booking.plugin_paths import (
     TRANSLATIONS_DIRECTORY,
 )
 from plugins.theme_booking.theme_booking.registration import booking_pages
+from plugins.theme_booking.theme_booking.resource_page_seo import (
+    BookingResourcePageSeo,
+)
 from plugins.theme_checkout import ThemeCheckoutPlugin
 from plugins.theme_cms import ThemeCmsPlugin
 from plugins.theme_cms.theme_cms.pages import DISPATCH_TEMPLATE
@@ -99,6 +102,12 @@ def test_the_form_route_follows_the_configured_form_slug(monkeypatch, tmp_path):
     assert "/booking-form/<slug>" not in _pages(enabled)
 
 
+# The routes that render their CMS page as-is (the resource route owns its head).
+PLAIN_CMS_ROUTES = {
+    rule: slug for rule, slug in CMS_ROUTES.items() if rule != "/booking/<slug>"
+}
+
+
 def test_each_cms_route_renders_its_cms_page_with_the_route_params():
     rendered = []
     fake_cms_pages = SimpleNamespace(
@@ -109,12 +118,20 @@ def test_each_cms_route_renders_its_cms_page_with_the_route_params():
     )
     pages = {page.rule: page for page in booking_pages(fake_cms_pages, "booking-form")}
 
-    for rule in CMS_ROUTES:
+    for rule in PLAIN_CMS_ROUTES:
         pages[rule].build_context(
             SimpleNamespace(view_args=MappingProxyType({"slug": "x"}))
         )
 
-    assert rendered == [(slug, {"slug": "x"}) for slug in CMS_ROUTES.values()]
+    assert rendered == [(slug, {"slug": "x"}) for slug in PLAIN_CMS_ROUTES.values()]
+
+
+def test_the_resource_route_owns_its_seo_head():
+    pages = {page.rule: page for page in booking_pages(object(), "booking-form")}
+
+    build_context = pages["/booking/<slug>"].build_context
+
+    assert isinstance(getattr(build_context, "__self__", None), BookingResourcePageSeo)
 
 
 def test_registers_the_booking_fragments(enabled):
