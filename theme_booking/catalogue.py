@@ -17,6 +17,7 @@ from plugins.theme.theme.theme_api import ThemeApiError
 from plugins.theme.theme.theme_request import ThemeRequest
 from plugins.theme_checkout.theme_checkout.checkout_api import CheckoutApi
 from plugins.theme_checkout.theme_checkout.price_display import price_display_view
+from plugins.theme_cms.theme_cms.components.archives import pagination
 from plugins.theme_cms.theme_cms.components.catalogue_filters import load_facets
 
 from .booking_api import BookingApi
@@ -143,15 +144,14 @@ def _card(
     }
 
 
-def _pager(current_page: int, total_pages: int) -> Optional[Dict[str, Any]]:
-    if total_pages <= FIRST_PAGE:
-        return None
-    return {
-        "current": current_page,
-        "total": total_pages,
-        "previous": current_page - 1 if current_page > FIRST_PAGE else None,
-        "next": current_page + 1 if current_page < total_pages else None,
+def _pager(filters: Mapping[str, Any], total_pages: int) -> Optional[Dict[str, Any]]:
+    """The catalogue's real ``<a href>`` prev/next, every other filter carried
+    along (S154 D5 — a crawler following the link keeps the active search)."""
+    query = _resources_query(filters)
+    carried_query = {
+        key: value for key, value in query.items() if key not in ("page", "per_page")
     }
+    return pagination(filters["page"], total_pages, extra_query=carried_query)
 
 
 class BookingCatalogue:
@@ -217,5 +217,5 @@ class BookingCatalogue:
             **context,
             "state": "resources" if cards else "empty",
             "resources": cards,
-            "pager": _pager(filters["page"], int(listing.get("pages") or FIRST_PAGE)),
+            "pager": _pager(filters, int(listing.get("pages") or FIRST_PAGE)),
         }

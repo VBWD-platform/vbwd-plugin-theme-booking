@@ -56,9 +56,9 @@
   {%- endif %}
   {%- if catalogue.pager %}
   <div class="booking-catalogue__pager" data-testid="booking-catalogue-pager">
-    <button type="submit" form="booking-catalogue-form" name="page" value="{{ catalogue.pager.previous or 1 }}" data-testid="booking-catalogue-prev"{% if not catalogue.pager.previous %} disabled{% endif %}>←</button>
-    <span>{{ catalogue.pager.current }} / {{ catalogue.pager.total }}</span>
-    <button type="submit" form="booking-catalogue-form" name="page" value="{{ catalogue.pager.next or catalogue.pager.total }}" data-testid="booking-catalogue-next"{% if not catalogue.pager.next %} disabled{% endif %}>→</button>
+    {%- if catalogue.pager.previous_href %}<a href="{{ catalogue.pager.previous_href }}" data-testid="booking-catalogue-prev">←</a>{% else %}<a aria-disabled="true" data-testid="booking-catalogue-prev">←</a>{% endif -%}
+    <span>{{ catalogue.pager.page }} / {{ catalogue.pager.pages }}</span>
+    {%- if catalogue.pager.next_href %}<a href="{{ catalogue.pager.next_href }}" data-testid="booking-catalogue-next">→</a>{% else %}<a aria-disabled="true" data-testid="booking-catalogue-next">→</a>{% endif -%}
   </div>
   {%- endif %}
 </div>

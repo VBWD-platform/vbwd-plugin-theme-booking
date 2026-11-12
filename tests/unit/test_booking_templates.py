@@ -99,7 +99,11 @@ def test_the_catalogue_renders_header_filters_cards_and_pager(plugin):
     )
     assert re.search(r'<span class="ghrm-pkg-downloads">\s*3 spots\s*</span>', html)
     assert _testid(html, "booking-catalogue-pager")
-    assert re.search(r'data-testid="booking-catalogue-prev"[^>]*disabled', html)
+    assert 'aria-disabled="true"' in _testid(html, "booking-catalogue-prev").group(0)
+    assert re.search(
+        r'<a href="\?tags=quiet&amp;page=2" data-testid="booking-catalogue-next">',
+        html,
+    )
 
 
 def test_the_catalogue_list_view_and_its_states(plugin):

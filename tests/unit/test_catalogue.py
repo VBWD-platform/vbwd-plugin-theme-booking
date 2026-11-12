@@ -144,7 +144,41 @@ def test_states_error_empty_and_pager():
     assert failed["state"] == "error" and failed["error"] == "boom"
     assert silent["error"] == "Failed to load resources"
     assert empty["state"] == "empty" and empty["pager"] is None
-    assert paged["pager"] == {"current": 2, "total": 3, "previous": 1, "next": 3}
+    assert paged["pager"] == {
+        "page": 2,
+        "pages": 3,
+        "previous_href": "?page=1",
+        "next_href": "?page=3",
+    }
+
+
+def test_the_pager_is_a_real_href_with_no_prev_on_page_one_and_no_next_on_the_last():
+    """S154 D5 — a crawler must find real ``<a href>`` pagination, no JS-only pager."""
+    first, _api = _catalogue(api=FakeBookingApi(resources={"items": [], "pages": 3}))
+    last, _api = _catalogue(
+        {"page": "3"}, api=FakeBookingApi(resources={"items": [], "pages": 3})
+    )
+
+    assert first["pager"]["previous_href"] is None
+    assert first["pager"]["next_href"] == "?page=2"
+    assert last["pager"]["previous_href"] == "?page=2"
+    assert last["pager"]["next_href"] is None
+
+
+def test_the_pager_href_carries_the_active_search_tags_and_facets():
+    context, _api = _catalogue(
+        {
+            "q": "smith",
+            "tags": "quiet,sunny",
+            "type": "specialist",
+            "page": "2",
+        },
+        api=FakeBookingApi(resources={"items": [], "pages": 3}),
+    )
+
+    assert context["pager"]["next_href"] == (
+        "?q=smith&tags=quiet%2Csunny&type=specialist&page=3"
+    )
 
 
 def test_the_fragment_uses_the_posted_page_path_as_the_form_action():

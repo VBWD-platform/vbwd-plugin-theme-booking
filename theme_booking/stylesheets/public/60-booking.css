@@ -121,7 +121,8 @@
   gap: 12px;
   margin-top: 24px;
 }
-.booking-catalogue__pager button {
+.booking-catalogue__pager button,
+.booking-catalogue__pager a {
   padding: 6px 14px;
   border: 1px solid var(--vbwd-border-color, #d1d5db);
   border-radius: 4px;
@@ -129,7 +130,8 @@
   color: var(--vbwd-color-text, #333);
   cursor: pointer;
 }
-.booking-catalogue__pager button:disabled { opacity: 0.4; cursor: default; }
+.booking-catalogue__pager button:disabled,
+.booking-catalogue__pager a[aria-disabled="true"] { opacity: 0.4; cursor: default; }
 
 /* BookingResourceDetail.vue (+ BookingForm.vue's shared header) */
 .booking-gallery { margin-bottom: 24px; }
